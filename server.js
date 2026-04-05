@@ -83,7 +83,7 @@ app.post('/api/generate-pdf', async (req, res) => {
   }
 });
 
-app.listen(PORT, '127.0.0.1', () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`\nPolonia4u server running at http://127.0.0.1:${PORT}`);
   console.log(`DeepL API: ${DEEPL_API_KEY ? 'configured' : 'NOT configured (no translation)'}`);
   console.log(`Google Drive: ${driveCredentials ? 'configured' : 'NOT configured (local only)'}`);
