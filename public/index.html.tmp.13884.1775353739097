@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polonia4u - Pedido de Confirmação de Cidadania</title>
+    <style>
+        :root {
+            --primary-color: #1a365d;
+            --secondary-color: #2b6cb0;
+            --bg-color: #f7fafc;
+            --border-color: #cbd5e0;
+            --success-color: #38a169;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: #2d3748;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid var(--border-color);
+        }
+        .header h1 { color: var(--primary-color); margin: 0 0 5px 0; text-transform: uppercase; font-size: 1.5em; }
+        .progress-container { display: flex; justify-content: space-between; margin-bottom: 30px; position: relative; flex-wrap: wrap; gap: 10px; }
+        .progress-step {
+            background-color: white; border: 2px solid var(--border-color); border-radius: 4px; padding: 8px 12px;
+            font-weight: bold; color: #718096; font-size: 0.85em; cursor: pointer; transition: 0.3s; flex-grow: 1; text-align: center;
+        }
+        .progress-step:hover { background-color: #f7fafc; border-color: var(--secondary-color); color: var(--secondary-color); }
+        .progress-step.active { border-color: var(--secondary-color); color: white; background-color: var(--secondary-color); }
+        .progress-step.completed { border-color: var(--secondary-color); color: var(--secondary-color); background-color: #ebf8ff; }
+        .form-step { display: none; animation: fadeIn 0.4s; }
+        .form-step.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .section-title {
+            background-color: #edf2f7; color: var(--primary-color); padding: 12px 15px;
+            border-left: 5px solid var(--secondary-color); margin: 30px 0 20px 0; font-size: 1.1em;
+            font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .subsection-title {
+            color: var(--secondary-color); font-weight: bold; margin: 25px 0 15px 0; text-transform: uppercase; font-size: 0.95em; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;
+        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; margin-bottom: 5px; color: #4a5568; font-size: 0.9em; }
+        input[type="text"], select, textarea {
+            width: 100%; padding: 8px 12px; border: 1px solid var(--border-color);
+            border-radius: 4px; font-size: 0.95em; box-sizing: border-box; transition: 0.2s;
+            background-color: #fcfcfc;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none; border-color: var(--secondary-color); background-color: #fff; box-shadow: 0 0 0 2px rgba(43, 108, 176, 0.2);
+        }
+        textarea { resize: vertical; min-height: 80px; }
+        .textarea-large { min-height: 150px; }
+        .date-group { display: flex; gap: 8px; }
+        .date-group input { text-align: center; padding: 8px; }
+        .date-group input:nth-child(1) { width: 40%; }
+        .date-group input:nth-child(2) { width: 30%; }
+        .date-group input:nth-child(3) { width: 30%; }
+        .radio-group { background: #fff; border: 1px solid var(--border-color); border-radius: 4px; padding: 12px; }
+        .radio-option { display: flex; align-items: center; margin-bottom: 8px; font-weight: normal; font-size: 0.9em; cursor: pointer; }
+        .radio-option:last-child { margin-bottom: 0; }
+        .radio-option input[type="radio"], .radio-option input[type="checkbox"] { margin-right: 10px; width: 16px; height: 16px; }
+        .btn-group { display: flex; justify-content: space-between; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border-color); }
+        .btn { padding: 10px 20px; font-size: 1em; font-weight: bold; border-radius: 4px; cursor: pointer; border: none; }
+        .btn-prev { background-color: #e2e8f0; color: #4a5568; }
+        .btn-next { background-color: var(--secondary-color); color: white; }
+        .btn-submit { background-color: var(--success-color); color: white; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .status-msg { margin-top: 20px; padding: 15px; border-radius: 4px; display: none; }
+        .status-msg.success { display: block; background: #c6f6d5; color: #22543d; }
+        .status-msg.error { display: block; background: #fed7d7; color: #742a2a; }
+        .status-msg.loading { display: block; background: #bee3f8; color: #2a4365; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>PEDIDO DE CONFIRMAÇÃO DE POSSE OU PERDA DE CIDADANIA POLONESA</h1>
+        <p>Formulário de Preenchimento Interno - Polonia4u</p>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-step active" id="indicator-1" onclick="goToStep(1)">1. Endereço e Pedido</div>
+        <div class="progress-step" id="indicator-2" onclick="goToStep(2)">2. Dados Requerente</div>
+        <div class="progress-step" id="indicator-3" onclick="goToStep(3)">3. Histórico</div>
+        <div class="progress-step" id="indicator-4" onclick="goToStep(4)">4. Pais</div>
+        <div class="progress-step" id="indicator-5" onclick="goToStep(5)">5. Avós</div>
+        <div class="progress-step" id="indicator-6" onclick="goToStep(6)">6. Biografia Req.</div>
+        <div class="progress-step" id="indicator-7" onclick="goToStep(7)">7. Biografia Ascend.</div>
+        <div class="progress-step" id="indicator-8" onclick="goToStep(8)">8. Anexos</div>
+    </div>
+
+    <form id="citizenshipForm">
+
+        <!-- STEP 1 -->
+        <div class="form-step active" id="step-1">
+            <div class="section-title">WOJEWODA (ÓRGÃO DESTINATÁRIO)</div>
+            <div class="form-group">
+                <label>Wojewoda (nome do órgão ao qual o pedido é dirigido)</label>
+                <input type="text" name="wojewoda" id="wojewoda" placeholder="Ex: MAZOWIECKI">
+            </div>
+
+            <div class="section-title">DADOS DO REQUERENTE (WNIOSKODAWCA)</div>
+            <div class="form-group">
+                <label>Nome completo do Requerente / Nome da entidade</label>
+                <input type="text" name="wnioskodawca_nome" id="wnioskodawca_nome">
+            </div>
+
+            <div class="section-title">ENDEREÇO DE RESIDÊNCIA OU SEDE</div>
+            <div class="grid-2">
+                <div class="form-group"><label>1. País / Estado</label><input type="text" name="endereco_pais" id="endereco_pais"></div>
+                <div class="form-group"><label>2. Cidade</label><input type="text" name="endereco_cidade" id="endereco_cidade"></div>
+            </div>
+            <div class="grid-3">
+                <div class="form-group"><label>3. Rua</label><input type="text" name="endereco_rua" id="endereco_rua"></div>
+                <div class="form-group"><label>4. N° Casa</label><input type="text" name="endereco_casa" id="endereco_casa"></div>
+                <div class="form-group"><label>5. N° Apto</label><input type="text" name="endereco_apto" id="endereco_apto"></div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label>6. Código Postal</label><input type="text" name="endereco_cep" id="endereco_cep"></div>
+                <div class="form-group"><label>7. Telefone</label><input type="text" name="endereco_tel" id="endereco_tel"></div>
+            </div>
+
+            <div class="section-title">O PEDIDO</div>
+            <div class="form-group">
+                <label>Tipo de Pedido e Nome do Alvo</label>
+                <div class="radio-group">
+                    <label class="radio-option"><input type="radio" name="tipo_pedido" value="posse" checked> Confirmando a posse de cidadania polonesa por:</label>
+                    <label class="radio-option"><input type="radio" name="tipo_pedido" value="perda"> Confirmando a perda de cidadania polonesa por:</label>
+                </div>
+                <input type="text" name="pedido_nome_alvo" id="pedido_nome_alvo" placeholder="Nome completo do requerente alvo da cidadania" style="margin-top: 10px;">
+            </div>
+
+            <div class="form-group">
+                <label>Informações Adicionais (Tradução Automática DeepL)</label>
+                <textarea name="pedido_info_adicional" id="pedido_info_adicional" placeholder="Preencher em Português..."></textarea>
+            </div>
+
+            <div class="btn-group"><div></div><button type="button" class="btn btn-next" onclick="goToStep(2)">Próximo ➔</button></div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="form-step" id="step-2">
+            <div class="section-title">OBJETIVO DO PEDIDO</div>
+            <div class="form-group">
+                <label>Se o pedido não for do próprio, qual o objetivo? (Tradução Automática DeepL)</label>
+                <textarea name="objetivo_pedido" id="objetivo_pedido" placeholder="Preencher em Português..."></textarea>
+            </div>
+
+            <div class="section-title">PARTE I - A. DADOS DA PESSOA A QUE SE REFERE O PEDIDO</div>
+            <div class="grid-2">
+                <div class="form-group"><label>1. Sobrenome</label><input type="text" name="req_sobrenome" id="req_sobrenome"></div>
+                <div class="form-group"><label>2. Sobrenome de Solteiro</label><input type="text" name="req_sobrenome_solteiro" id="req_sobrenome_solteiro"></div>
+                <div class="form-group"><label>3. Nome(s)</label><input type="text" name="req_nomes" id="req_nomes"></div>
+                <div class="form-group"><label>4. Nome e Sobrenome do Pai</label><input type="text" name="req_pai" id="req_pai"></div>
+                <div class="form-group"><label>5. Nome e Sobrenome Solteira da Mãe</label><input type="text" name="req_mae" id="req_mae"></div>
+                <div class="form-group"><label>6. Sobrenomes usados e Data da mudança</label><input type="text" name="req_sobrenomes_usados" id="req_sobrenomes_usados"></div>
+            </div>
+            <div class="grid-4">
+                <div class="form-group"><label>7. Data Nasc.</label>
+                    <div class="date-group">
+                        <input type="text" name="req_nasc_ano" placeholder="AAAA" maxlength="4">
+                        <input type="text" name="req_nasc_mes" placeholder="MM" maxlength="2">
+                        <input type="text" name="req_nasc_dia" placeholder="DD" maxlength="2">
+                    </div>
+                </div>
+                <div class="form-group"><label>8. Sexo</label>
+                    <select name="req_sexo" id="req_sexo">
+                        <option value="M">M (Masculino)</option>
+                        <option value="K">F (Feminino)</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>11. Estado Civil</label>
+                    <select name="req_estado_civil" id="req_estado_civil">
+                        <option value="KAWALER/PANNA">Solteiro(a)</option>
+                        <option value="ŻONATY/MĘŻATKA">Casado(a)</option>
+                        <option value="ROZWIEDZIONY">Divorciado(a)</option>
+                        <option value="WDOWIEC/WDOWA">Viúvo(a)</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>12. Número de ID (PESEL)</label><input type="text" name="req_pesel" id="req_pesel"></div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label>9. Local de Nasc. (País/Cidade)</label><input type="text" name="req_local_nasc" id="req_local_nasc"></div>
+                <div class="form-group"><label>10. Cidadanias Estrangeiras e Data de aquisição</label><input type="text" name="req_cidadanias" id="req_cidadanias"></div>
+            </div>
+            <div class="btn-group"><button type="button" class="btn btn-prev" onclick="goToStep(1)">⬅ Anterior</button><button type="button" class="btn btn-next" onclick="goToStep(3)">Próximo ➔</button></div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="form-step" id="step-3">
+            <div class="section-title">PARTE I - B, C, D. HISTÓRICO DE DECISÕES E RESIDÊNCIA</div>
+            <div class="form-group">
+                <label>B. Já houve decisão anterior de confirmação/perda de cidadania polonesa para esta pessoa? (Tradução Automática DeepL)</label>
+                <textarea name="hist_decisao_anterior" id="hist_decisao_anterior" placeholder="Se sim, qual órgão e data da decisão. (Se não, preencher NÃO)"></textarea>
+            </div>
+            <div class="form-group">
+                <label>C. O requerente já pediu autorização para mudar/renunciar à cidadania? (Tradução Automática DeepL)</label>
+                <textarea name="hist_mudanca_cidadania" id="hist_mudanca_cidadania" placeholder="Se sim, qual órgão e data. (Se não, preencher NÃO)"></textarea>
+            </div>
+            <div class="form-group">
+                <label>D. Locais de residência na Polônia e no exterior (Tradução Automática DeepL)</label>
+                <textarea name="hist_residencia" id="hist_residencia" placeholder="Preencher em Português..."></textarea>
+            </div>
+            <div class="btn-group"><button type="button" class="btn btn-prev" onclick="goToStep(2)">⬅ Anterior</button><button type="button" class="btn btn-next" onclick="goToStep(4)">Próximo ➔</button></div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="form-step" id="step-4">
+            <div class="section-title">PARTE I - E. DADOS PESSOAIS DOS PAIS</div>
+
+            <div class="subsection-title">I. DADOS DA MÃE</div>
+            <div class="grid-2">
+                <div class="form-group"><label>1. Sobrenome</label><input type="text" name="mae_sobrenome"></div>
+                <div class="form-group"><label>2. Sobrenome de Solteira</label><input type="text" name="mae_sobrenome_solteira"></div>
+                <div class="form-group"><label>3. Nome(s)</label><input type="text" name="mae_nomes"></div>
+                <div class="form-group"><label>4. Nome e Sobrenome do Pai dela</label><input type="text" name="mae_pai"></div>
+                <div class="form-group"><label>5. Nome e Sobrenome da Mãe dela</label><input type="text" name="mae_mae"></div>
+                <div class="form-group"><label>6. Sobrenomes usados e Data da mudança</label><input type="text" name="mae_sobrenomes_usados"></div>
+            </div>
+            <div class="grid-3">
+                <div class="form-group"><label>7. Data Nasc.</label>
+                    <div class="date-group">
+                        <input type="text" name="mae_nasc_ano" placeholder="AAAA" maxlength="4">
+                        <input type="text" name="mae_nasc_mes" placeholder="MM" maxlength="2">
+                        <input type="text" name="mae_nasc_dia" placeholder="DD" maxlength="2">
+                    </div>
+                </div>
+                <div class="form-group"><label>8. Local Nasc.</label><input type="text" name="mae_local_nasc"></div>
+                <div class="form-group"><label>9. Estado Civil</label><input type="text" name="mae_estado_civil"></div>
+                <div class="form-group"><label>10. Data Casamento</label>
+                    <div class="date-group">
+                        <input type="text" name="mae_cas_ano" placeholder="AAAA" maxlength="4">
+                        <input type="text" name="mae_cas_mes" placeholder="MM" maxlength="2">
+                        <input type="text" name="mae_cas_dia" placeholder="DD" maxlength="2">
+                    </div>
+                </div>
+                <div class="form-group"><label>11. Local Casamento</label><input type="text" name="mae_local_cas"></div>
+                <div class="form-group"><label>13. Número de ID (PESEL)</label><input type="text" name="mae_pesel"></div>
+            </div>
+            <div class="form-group"><label>12. Cidadanias na data de nascimento do requerente</label><input type="text" name="mae_cidadanias"></div>
+
+            <div class="subsection-title">II. DADOS DO PAI</div>
+            <div class="grid-2">
+                <div class="form-group"><label>1. Sobrenome</label><input type="text" name="pai_sobrenome"></div>
+                <div class="form-group"><label>2. Sobrenome de Solteiro</label><input type="text" name="pai_sobrenome_solteiro"></div>
+                <div class="form-group"><label>3. Nome(s)</label><input type="text" name="pai_nomes"></div>
+                <div class="form-group"><label>4. Nome e Sobrenome do Pai dele</label><input type="text" name="pai_pai"></div>
+                <div class="form-group"><label>5. Nome e Sobrenome da Mãe dele</label><input type="text" name="pai_mae"></div>
+                <div class="form-group"><label>6. Sobrenomes usados e Data da mudança</label><input type="text" name="pai_sobrenomes_usados"></div>
+            </div>
+            <div class="grid-3">
+                <div class="form-group"><label>7. Data Nasc.</label>
+                    <div class="date-group">
+                        <input type="text" name="pai_nasc_ano" placeholder="AAAA" maxlength="4">
+                        <input type="text" name="pai_nasc_mes" placeholder="MM" maxlength="2">
+                        <input type="text" name="pai_nasc_dia" placeholder="DD" maxlength="2">
+                    </div>
+                </div>
+                <div class="form-group"><label>8. Local Nasc.</label><input type="text" name="pai_local_nasc"></div>
+                <div class="form-group"><label>9. Estado Civil</label><input type="text" name="pai_estado_civil"></div>
+                <div class="form-group"><label>10. Data Casamento</label>
+                    <div class="date-group">
+                        <input type="text" name="pai_cas_ano" placeholder="AAAA" maxlength="4">
+                        <input type="text" name="pai_cas_mes" placeholder="MM" maxlength="2">
+                        <input type="text" name="pai_cas_dia" placeholder="DD" maxlength="2">
+                    </div>
+                </div>
+                <div class="form-group"><label>11. Local Casamento</label><input type="text" name="pai_local_cas"></div>
+                <div class="form-group"><label>13. Número de ID (PESEL)</label><input type="text" name="pai_pesel"></div>
+            </div>
+            <div class="form-group"><label>12. Cidadanias na data de nascimento do requerente</label><input type="text" name="pai_cidadanias"></div>
+
+            <div class="btn-group"><button type="button" class="btn btn-prev" onclick="goToStep(3)">⬅ Anterior</button><button type="button" class="btn btn-next" onclick="goToStep(5)">Próximo ➔</button></div>
+        </div>
+
+        <!-- STEP 5 -->
+        <div class="form-step" id="step-5">
+            <div class="section-title">PARTE I - F. DADOS DE OUTROS ASCENDENTES (AVÓS)</div>
+
+            <div class="subsection-title">I. AVÔ MATERNO</div>
+            <div class="grid-3">
+                <div class="form-group"><label>1. Sobrenome</label><input type="text" name="avo_mat_sobrenome"></div>
+                <div class="form-group"><label>2. Sobr. Solteiro</label><input type="text" name="avo_mat_sobrenome_solteiro"></div>
+                <div class="form-group"><label>3. Nome(s)</label><input type="text" name="avo_mat_nomes"></div>
+                <div class="form-group"><label>4. Pai dele</label><input type="text" name="avo_mat_pai"></div>
+                <div class="form-group"><label>5. Mãe dele</label><input type="text" name="avo_mat_mae"></div>
+                <div class="form-group"><label>6. Data Nasc.</label>
+                    <div class="date-group">
+                        <input type="text" name="avo_mat_nasc_ano" placeholder="AAAA" maxlength="4">
+                        <input type="text" name="avo_mat_nasc_mes" placeholder="MM" maxlength="2">
+                        <input type="text" name="avo_mat_nasc_dia" placeholder="DD" maxlength="2">
+                    </div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label>7. Local Nasc.</label><input type="text" name="avo_mat_local_nasc"></div>
+                <div class="form-group"><label>8. Número de ID (PESEL)</label><input type="text" name="avo_mat_pesel"></div>
+            </div>
+
+            <div class="subsection-title">II. AVÓ MATERNA</div>
+            <div class="grid-3">
+                <div class="form-group"><label>1. Sobrenome</label><input type="text" name="ava_mat_sobrenome"></div>
+                <div class="form-group"><label>2. Sobr. Solteira</label><input type="text" name="ava_mat_sobrenome_solteira"></div>
+                <div class="form-group"><label>3. Nome(s)</label><input type="text" name="ava_mat_nomes"></div>
+                <div class="form-group"><label>4. Pai dela</label><input type="text" name="ava_mat_pai"></div>
+                <div class="form-group"><label>5. Mãe dela</label><input type="text" name="ava_mat_mae"></div>
+                <div class="form-group"><label>6. Data Nasc.</label>
+                    <div class="date-group">
+                        <input type="text" name="ava_mat_nasc_ano" placeholder="AAAA" maxlength="4">
+                        <input type="text" name="ava_mat_nasc_mes" placeholder="MM" maxlength="2">
+                        <input type="text" name="ava_mat_nasc_dia" placeholder="DD" maxlength="2">
+                    </div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label>7. Local Nasc.</label><input type="text" name="ava_mat_local_nasc"></div>
+                <div class="form-group"><label>8. Número de ID (PESEL)</label><input type="text" name="ava_mat_pesel"></div>
+            </div>
+
+            <div class="subsection-title">III. AVÔ PATERNO</div>
+            <div class="grid-3">
+                <div class="form-group"><label>1. Sobrenome</label><input type="text" name="avo_pat_sobrenome"></div>
+                <div class="form-group"><label>2. Sobr. Solteiro</label><input type="text" name="avo_pat_sobrenome_solteiro"></div>
+                <div class="form-group"><label>3. Nome(s)</label><input type="text" name="avo_pat_nomes"></div>
+                <div class="form-group"><label>4. Pai dele</label><input type="text" name="avo_pat_pai"></div>
+                <div class="form-group"><label>5. Mãe dele</label><input type="text" name="avo_pat_mae"></div>
+                <div class="form-group"><label>6. Data Nasc.</label>
+                    <div class="date-group">
+                        <input type="text" name="avo_pat_nasc_ano" placeholder="AAAA" maxlength="4">
+                        <input type="text" name="avo_pat_nasc_mes" placeholder="MM" maxlength="2">
+                        <input type="text" name="avo_pat_nasc_dia" placeholder="DD" maxlength="2">
+                    </div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label>7. Local Nasc.</label><input type="text" name="avo_pat_local_nasc"></div>
+                <div class="form-group"><label>8. Número de ID (PESEL)</label><input type="text" name="avo_pat_pesel"></div>
+            </div>
+
+            <div class="subsection-title">IV. AVÓ PATERNA</div>
+            <div class="grid-3">
+                <div class="form-group"><label>1. Sobrenome</label><input type="text" name="ava_pat_sobrenome"></div>
+                <div class="form-group"><label>2. Sobr. Solteira</label><input type="text" name="ava_pat_sobrenome_solteira"></div>
+                <div class="form-group"><label>3. Nome(s)</label><input type="text" name="ava_pat_nomes"></div>
+                <div class="form-group"><label>4. Pai dela</label><input type="text" name="ava_pat_pai"></div>
+                <div class="form-group"><label>5. Mãe dela</label><input type="text" name="ava_pat_mae"></div>
+                <div class="form-group"><label>6. Data Nasc.</label>
+                    <div class="date-group">
+                        <input type="text" name="ava_pat_nasc_ano" placeholder="AAAA" maxlength="4">
+                        <input type="text" name="ava_pat_nasc_mes" placeholder="MM" maxlength="2">
+                        <input type="text" name="ava_pat_nasc_dia" placeholder="DD" maxlength="2">
+                    </div>
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label>7. Local Nasc.</label><input type="text" name="ava_pat_local_nasc"></div>
+                <div class="form-group"><label>8. Número de ID (PESEL)</label><input type="text" name="ava_pat_pesel"></div>
+            </div>
+
+            <div class="btn-group"><button type="button" class="btn btn-prev" onclick="goToStep(4)">⬅ Anterior</button><button type="button" class="btn btn-next" onclick="goToStep(6)">Próximo ➔</button></div>
+        </div>
+
+        <!-- STEP 6 -->
+        <div class="form-step" id="step-6">
+            <div class="section-title">PARTE II - BIOGRAFIA E DECLARAÇÕES</div>
+            <div class="form-group">
+                <label>A. Biografia do Requerente (Tradução Automática DeepL)</label>
+                <textarea class="textarea-large" name="bio_requerente" id="bio_requerente" placeholder="Histórico de trabalho, militar, mudança de nomes..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>B. Os pais escolheram cidadania estrangeira para a criança (Art. 6 par. 1)?</label>
+                <div class="radio-group">
+                    <label class="radio-option"><input type="radio" name="art6" value="TAK"> SIM</label>
+                    <label class="radio-option"><input type="radio" name="art6" value="NIE" checked> NÃO</label>
+                    <label class="radio-option"><input type="radio" name="art6" value="NIE WIEM"> NÃO SEI</label>
+                    <label class="radio-option"><input type="radio" name="art6" value="NIE DOTYCZY"> NÃO SE APLICA</label>
+                </div>
+                <input type="text" name="art6_orgao" id="art6_orgao" placeholder="Nome do Órgão, se aplicável" style="margin-top: 10px;">
+            </div>
+            <div class="btn-group"><button type="button" class="btn btn-prev" onclick="goToStep(5)">⬅ Anterior</button><button type="button" class="btn btn-next" onclick="goToStep(7)">Próximo ➔</button></div>
+        </div>
+
+        <!-- STEP 7 -->
+        <div class="form-step" id="step-7">
+            <div class="section-title">PARTE III - BIOGRAFIAS DOS ASCENDENTES</div>
+            <p style="font-size: 0.85em; color: #718096; margin-bottom: 20px;">Todos os campos desta secção serão traduzidos automaticamente (DeepL PT→PL).</p>
+
+            <div class="subsection-title">A. INFORMAÇÕES ADICIONAIS: PAIS</div>
+            <div class="form-group"><label>I. Biografia da Mãe</label><textarea name="bio_mae" id="bio_mae"></textarea></div>
+            <div class="form-group"><label>II. Biografia do Pai</label><textarea name="bio_pai" id="bio_pai"></textarea></div>
+
+            <div class="subsection-title">B. INFORMAÇÕES ADICIONAIS: AVÓS</div>
+            <div class="grid-2">
+                <div class="form-group"><label>I. Biografia do Avô Materno</label><textarea name="bio_avo_mat" id="bio_avo_mat"></textarea></div>
+                <div class="form-group"><label>II. Biografia da Avó Materna</label><textarea name="bio_ava_mat" id="bio_ava_mat"></textarea></div>
+                <div class="form-group"><label>III. Biografia do Avô Paterno</label><textarea name="bio_avo_pat" id="bio_avo_pat"></textarea></div>
+                <div class="form-group"><label>IV. Biografia da Avó Paterna</label><textarea name="bio_ava_pat" id="bio_ava_pat"></textarea></div>
+            </div>
+
+            <div class="subsection-title">C. BISAVÓS E OUTROS ANTEPASSADOS</div>
+            <div class="form-group"><label>Biografia de outros antepassados (se o direito vier deles)</label><textarea name="bio_bisavos" id="bio_bisavos"></textarea></div>
+
+            <div class="subsection-title">D. OUTRAS INFORMAÇÕES VITAIS</div>
+            <div class="form-group"><label>I. Decisões de cidadania de irmãos ou ascendentes?</label><textarea name="info_decisoes_irmaos" id="info_decisoes_irmaos"></textarea></div>
+            <div class="form-group"><label>II. Os ascendentes possuem documentos de identidade poloneses?</label><textarea name="info_docs_poloneses" id="info_docs_poloneses"></textarea></div>
+            <div class="form-group"><label>III. Os ascendentes pediram alteração/renúncia de cidadania?</label><textarea name="info_renuncia" id="info_renuncia"></textarea></div>
+
+            <div class="btn-group"><button type="button" class="btn btn-prev" onclick="goToStep(6)">⬅ Anterior</button><button type="button" class="btn btn-next" onclick="goToStep(8)">Próximo ➔</button></div>
+        </div>
+
+        <!-- STEP 8 -->
+        <div class="form-step" id="step-8">
+            <div class="section-title">PARTE IV - INFORMAÇÕES ADICIONAIS</div>
+            <div class="form-group">
+                <label>Outras informações ou explicações (Tradução Automática DeepL)</label>
+                <textarea name="info_adicional" id="info_adicional" placeholder="Preencher em Português..."></textarea>
+            </div>
+
+            <div class="section-title">ANEXOS AO PEDIDO</div>
+            <div class="form-group">
+                <label>1 - 20. Lista de Documentos (Anexos 1 a 20)</label>
+                <textarea class="textarea-large" name="anexos_lista" id="anexos_lista" placeholder="1. COMPROVANTE DE PAGAMENTO DA TAXA...&#10;2. CERTIDÃO DE NASCIMENTO..."></textarea>
+            </div>
+
+            <div class="section-title">ASSINATURA</div>
+            <div class="grid-2">
+                <div class="form-group"><label>Data de Assinatura pelo Requerente</label>
+                    <div class="date-group">
+                        <input type="text" name="assinatura_ano" placeholder="AAAA" maxlength="4">
+                        <input type="text" name="assinatura_mes" placeholder="MM" maxlength="2">
+                        <input type="text" name="assinatura_dia" placeholder="DD" maxlength="2">
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button type="button" class="btn btn-prev" onclick="goToStep(7)">⬅ Anterior</button>
+                <button type="button" class="btn btn-submit" id="submitBtn" onclick="submitForm()">Processar PDF (Finalizar)</button>
+            </div>
+            <div id="statusMsg" class="status-msg"></div>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    function goToStep(targetStep) {
+        document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.progress-step').forEach(el => {
+            el.classList.remove('active');
+            el.classList.remove('completed');
+        });
+        document.getElementById(`step-${targetStep}`).classList.add('active');
+        for (let i = 1; i <= 8; i++) {
+            const indicator = document.getElementById(`indicator-${i}`);
+            if (i < targetStep) indicator.classList.add('completed');
+            else if (i === targetStep) indicator.classList.add('active');
+        }
+        window.scrollTo(0, 0);
+    }
+
+    async function submitForm() {
+        const btn = document.getElementById('submitBtn');
+        const msg = document.getElementById('statusMsg');
+        btn.disabled = true;
+        msg.className = 'status-msg loading';
+        msg.textContent = 'Processando... Traduzindo campos e gerando PDF. Aguarde.';
+
+        const form = document.getElementById('citizenshipForm');
+        const formData = new FormData(form);
+        const data = {};
+        for (const [key, value] of formData.entries()) {
+            data[key] = value;
+        }
+
+        try {
+            const res = await fetch('/api/generate-pdf', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (result.success) {
+                msg.className = 'status-msg success';
+                msg.innerHTML = `PDF gerado com sucesso!<br><a href="${result.downloadUrl}" target="_blank">Baixar PDF</a>`;
+                if (result.driveUrl) {
+                    msg.innerHTML += `<br><a href="${result.driveUrl}" target="_blank">Abrir no Google Drive</a>`;
+                }
+            } else {
+                throw new Error(result.error || 'Erro desconhecido');
+            }
+        } catch (err) {
+            msg.className = 'status-msg error';
+            msg.textContent = 'Erro: ' + err.message;
+        }
+        btn.disabled = false;
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page { size: A4; margin: 20mm 15mm 20mm 15mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Arial', sans-serif; font-size: 9pt; color: #000; line-height: 1.3; }
+
+        .page { page-break-after: always; position: relative; }
+        .page:last-child { page-break-after: avoid; }
+
+        h1 { font-size: 11pt; text-align: center; text-transform: uppercase; margin-bottom: 10px; }
+        h2 { font-size: 10pt; text-align: center; margin-bottom: 15px; }
+
+        .section-label { font-weight: bold; font-size: 9pt; margin: 12px 0 6px 0; text-transform: uppercase; }
+        .part-label { font-weight: bold; font-size: 10pt; text-align: center; letter-spacing: 4px; margin: 15px 0 10px 0; }
+
+        /* Grid table for fields */
+        .field-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        .field-table td { border: 1px solid #000; padding: 4px 6px; vertical-align: top; font-size: 8.5pt; }
+        .field-table .label { background-color: #f5f5f5; font-size: 7.5pt; color: #333; padding: 2px 6px; }
+        .field-table .value { min-height: 18px; font-size: 9pt; }
+
+        .date-cell { text-align: center; }
+        .date-separator { font-size: 7pt; color: #666; }
+
+        .text-block { border: 1px solid #000; min-height: 60px; padding: 6px; margin-bottom: 8px; font-size: 9pt; white-space: pre-wrap; word-wrap: break-word; }
+        .text-block-large { min-height: 200px; }
+        .text-block-medium { min-height: 100px; }
+
+        .checkbox-row { margin: 4px 0; font-size: 9pt; }
+        .checkbox { display: inline-block; width: 12px; height: 12px; border: 1px solid #000; margin-right: 4px; text-align: center; font-size: 8pt; line-height: 12px; vertical-align: middle; }
+        .checkbox.checked { background-color: #000; color: #fff; }
+
+        .signature-area { margin-top: 30px; display: flex; justify-content: space-between; }
+        .signature-box { text-align: center; width: 45%; }
+        .signature-line { border-top: 1px solid #000; margin-top: 40px; padding-top: 4px; font-size: 7.5pt; }
+
+        .annexes-table { width: 100%; border-collapse: collapse; }
+        .annexes-table td { border: 1px solid #000; padding: 3px 6px; font-size: 8.5pt; }
+        .annexes-table .num { width: 30px; text-align: center; background: #f5f5f5; }
+
+        .header-info { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        .header-info .stamp { border: 1px solid #000; width: 45%; height: 50px; padding: 4px; font-size: 7pt; color: #888; }
+
+        .note { font-size: 7.5pt; color: #555; margin: 8px 0; font-style: italic; }
+        .subsection { font-weight: bold; font-size: 9pt; margin: 10px 0 6px 0; border-bottom: 1px solid #ccc; padding-bottom: 2px; }
+    </style>
+</head>
+<body>
+
+<!-- STRONA 1 z 12 -->
+<div class="page">
+    <div class="header-info">
+        <div class="stamp">(pieczęć organu przyjmującego wniosek)</div>
+        <div class="stamp">(miejsce i data złożenia wniosku)</div>
+    </div>
+
+    <p style="margin-bottom:8px;"><strong>WOJEWODA</strong> {{wojewoda}}</p>
+
+    <p class="section-label">WNIOSKODAWCA</p>
+    <table class="field-table">
+        <tr><td class="label">Imię i nazwisko / nazwa podmiotu</td></tr>
+        <tr><td class="value">{{wnioskodawca_nome}}</td></tr>
+    </table>
+
+    <p class="section-label">ADRES ZAMIESZKANIA / SIEDZIBY</p>
+    <table class="field-table">
+        <tr>
+            <td class="label" style="width:50%">1 Państwo/województwo</td>
+            <td class="label" style="width:50%">2 Miejscowość</td>
+        </tr>
+        <tr>
+            <td class="value">{{endereco_pais}}</td>
+            <td class="value">{{endereco_cidade}}</td>
+        </tr>
+        <tr>
+            <td class="label" style="width:40%">3 Ulica</td>
+            <td class="label" style="width:30%">4 Numer domu</td>
+        </tr>
+        <tr>
+            <td class="value">{{endereco_rua}}</td>
+            <td class="value">{{endereco_casa}}</td>
+        </tr>
+        <tr>
+            <td class="label">5 Numer mieszkania</td>
+            <td class="label">6 Kod pocztowy</td>
+        </tr>
+        <tr>
+            <td class="value">{{endereco_apto}}</td>
+            <td class="value">{{endereco_cep}}</td>
+        </tr>
+        <tr>
+            <td class="label" colspan="2">7 Telefon kontaktowy</td>
+        </tr>
+        <tr>
+            <td class="value" colspan="2">{{endereco_tel}}</td>
+        </tr>
+    </table>
+
+    <h2>WNIOSEK<br>o potwierdzenie posiadania lub utraty obywatelstwa polskiego</h2>
+
+    <p style="margin-bottom:6px;">Wnoszę o wydanie decyzji:</p>
+    <div class="checkbox-row">
+        <span class="checkbox {{check_posse}}">X</span> potwierdzającej posiadanie obywatelstwa polskiego przez <strong>{{pedido_nome_alvo}}</strong>
+    </div>
+    <div class="checkbox-row">
+        <span class="checkbox {{check_perda}}">X</span> potwierdzającej utratę obywatelstwa polskiego przez <strong>{{pedido_nome_alvo}}</strong>
+    </div>
+
+    <p class="section-label" style="margin-top:12px;">Dodatkowe informacje dotyczące stanu faktycznego lub prawnego:</p>
+    <div class="text-block">{{pedido_info_adicional_pl}}</div>
+
+    <p class="note">Wniosek wypełnia się w języku polskim</p>
+</div>
+
+<!-- STRONA 2 z 12 -->
+<div class="page">
+    <p style="text-align:right; font-size:8pt; margin-bottom:10px;">Strona 2 z 12</p>
+
+    <p class="section-label">Cel wniosku (jeżeli dotyczy osoby trzeciej):</p>
+    <div class="text-block">{{objetivo_pedido_pl}}</div>
+
+    <p class="part-label">C Z Ę Ś Ć  I</p>
+    <p class="section-label">A. Dane osoby, której dotyczy wniosek.</p>
+
+    <table class="field-table">
+        <tr><td class="label" style="width:50%">1 Nazwisko</td><td class="label" style="width:50%">2 Nazwisko rodowe</td></tr>
+        <tr><td class="value">{{req_sobrenome}}</td><td class="value">{{req_sobrenome_solteiro}}</td></tr>
+        <tr><td class="label">3 Imię (imiona)</td><td class="label">4 Imię i nazwisko ojca</td></tr>
+        <tr><td class="value">{{req_nomes}}</td><td class="value">{{req_pai}}</td></tr>
+        <tr><td class="label">5 Imię i nazwisko rodowe matki</td><td class="label">6 Używane nazwiska wraz z datą zmiany</td></tr>
+        <tr><td class="value">{{req_mae}}</td><td class="value">{{req_sobrenomes_usados}}</td></tr>
+    </table>
+    <table class="field-table">
+        <tr>
+            <td class="label" style="width:25%">7 Data urodzenia</td>
+            <td class="label" style="width:15%">8 Płeć</td>
+            <td class="label" style="width:30%">9 Miejsce urodzenia</td>
+            <td class="label" style="width:30%">10 Posiadane obce obywatelstwa</td>
+        </tr>
+        <tr>
+            <td class="value date-cell">{{req_nasc_ano}} / {{req_nasc_mes}} / {{req_nasc_dia}}</td>
+            <td class="value date-cell">{{req_sexo}}</td>
+            <td class="value">{{req_local_nasc}}</td>
+            <td class="value">{{req_cidadanias}}</td>
+        </tr>
+        <tr>
+            <td class="label" style="width:50%">11 Stan cywilny</td>
+            <td class="label" colspan="3">12 Nr PESEL</td>
+        </tr>
+        <tr>
+            <td class="value">{{req_estado_civil}}</td>
+            <td class="value" colspan="3">{{req_pesel}}</td>
+        </tr>
+    </table>
+
+    <p class="section-label">B. Czy była wydana decyzja stwierdzająca/potwierdzająca posiadanie lub utratę obywatelstwa polskiego?</p>
+    <div class="text-block">{{hist_decisao_anterior_pl}}</div>
+</div>
+
+<!-- STRONA 3 z 12 -->
+<div class="page">
+    <p style="text-align:right; font-size:8pt; margin-bottom:10px;">Strona 3 z 12</p>
+
+    <p class="section-label">C. Czy osoba ubiegała się o zmianę/zrzeczenie obywatelstwa polskiego?</p>
+    <div class="text-block">{{hist_mudanca_cidadania_pl}}</div>
+
+    <p class="section-label">D. Miejsca zamieszkania w Polsce oraz za granicą.</p>
+    <div class="text-block">{{hist_residencia_pl}}</div>
+
+    <p class="section-label">E. Dane osobowe rodziców.</p>
+    <p class="subsection">I. Dane dotyczące matki.</p>
+    <table class="field-table">
+        <tr><td class="label" style="width:50%">1 Nazwisko</td><td class="label">2 Nazwisko rodowe</td></tr>
+        <tr><td class="value">{{mae_sobrenome}}</td><td class="value">{{mae_sobrenome_solteira}}</td></tr>
+        <tr><td class="label">3 Imię (imiona)</td><td class="label">4 Imię i nazwisko ojca</td></tr>
+        <tr><td class="value">{{mae_nomes}}</td><td class="value">{{mae_pai}}</td></tr>
+        <tr><td class="label">5 Imię i nazwisko rodowe matki</td><td class="label">6 Używane nazwiska wraz z datą zmiany</td></tr>
+        <tr><td class="value">{{mae_mae}}</td><td class="value">{{mae_sobrenomes_usados}}</td></tr>
+    </table>
+    <table class="field-table">
+        <tr>
+            <td class="label" style="width:25%">7 Data urodzenia</td>
+            <td class="label" style="width:25%">8 Miejsce urodzenia</td>
+            <td class="label" style="width:25%">9 Stan cywilny</td>
+            <td class="label" style="width:25%">10 Data zawarcia małżeństwa</td>
+        </tr>
+        <tr>
+            <td class="value date-cell">{{mae_nasc_ano}} / {{mae_nasc_mes}} / {{mae_nasc_dia}}</td>
+            <td class="value">{{mae_local_nasc}}</td>
+            <td class="value">{{mae_estado_civil}}</td>
+            <td class="value date-cell">{{mae_cas_ano}} / {{mae_cas_mes}} / {{mae_cas_dia}}</td>
+        </tr>
+        <tr>
+            <td class="label" colspan="2">11 Miejsce zawarcia małżeństwa</td>
+            <td class="label" colspan="2">12 Obywatelstwa w dacie urodzenia</td>
+        </tr>
+        <tr>
+            <td class="value" colspan="2">{{mae_local_cas}}</td>
+            <td class="value" colspan="2">{{mae_cidadanias}}</td>
+        </tr>
+        <tr><td class="label" colspan="4">13 Nr PESEL</td></tr>
+        <tr><td class="value" colspan="4">{{mae_pesel}}</td></tr>
+    </table>
+</div>
+
+<!-- STRONA 4 z 12 -->
+<div class="page">
+    <p style="text-align:right; font-size:8pt; margin-bottom:10px;">Strona 4 z 12</p>
+
+    <p class="subsection">II. Dane dotyczące ojca.</p>
+    <table class="field-table">
+        <tr><td class="label" style="width:50%">1 Nazwisko</td><td class="label">2 Nazwisko rodowe</td></tr>
+        <tr><td class="value">{{pai_sobrenome}}</td><td class="value">{{pai_sobrenome_solteiro}}</td></tr>
+        <tr><td class="label">3 Imię (imiona)</td><td class="label">4 Imię i nazwisko ojca</td></tr>
+        <tr><td class="value">{{pai_nomes}}</td><td class="value">{{pai_pai}}</td></tr>
+        <tr><td class="label">5 Imię i nazwisko rodowe matki</td><td class="label">6 Używane nazwiska wraz z datą zmiany</td></tr>
+        <tr><td class="value">{{pai_mae}}</td><td class="value">{{pai_sobrenomes_usados}}</td></tr>
+    </table>
+    <table class="field-table">
+        <tr>
+            <td class="label" style="width:25%">7 Data urodzenia</td>
+            <td class="label" style="width:25%">8 Miejsce urodzenia</td>
+            <td class="label" style="width:25%">9 Stan cywilny</td>
+            <td class="label" style="width:25%">10 Data zawarcia małżeństwa</td>
+        </tr>
+        <tr>
+            <td class="value date-cell">{{pai_nasc_ano}} / {{pai_nasc_mes}} / {{pai_nasc_dia}}</td>
+            <td class="value">{{pai_local_nasc}}</td>
+            <td class="value">{{pai_estado_civil}}</td>
+            <td class="value date-cell">{{pai_cas_ano}} / {{pai_cas_mes}} / {{pai_cas_dia}}</td>
+        </tr>
+        <tr>
+            <td class="label" colspan="2">11 Miejsce zawarcia małżeństwa</td>
+            <td class="label" colspan="2">12 Obywatelstwa w dacie urodzenia</td>
+        </tr>
+        <tr>
+            <td class="value" colspan="2">{{pai_local_cas}}</td>
+            <td class="value" colspan="2">{{pai_cidadanias}}</td>
+        </tr>
+        <tr><td class="label" colspan="4">13 Nr PESEL</td></tr>
+        <tr><td class="value" colspan="4">{{pai_pesel}}</td></tr>
+    </table>
+
+    <p class="section-label">F. Dane osobowe dalszych wstępnych.</p>
+    <p class="subsection">I. Dane dotyczące dziadka ze strony matki.</p>
+    <table class="field-table">
+        <tr><td class="label" style="width:33%">1 Nazwisko</td><td class="label" style="width:33%">2 Nazwisko rodowe</td><td class="label" style="width:34%">3 Imię (imiona)</td></tr>
+        <tr><td class="value">{{avo_mat_sobrenome}}</td><td class="value">{{avo_mat_sobrenome_solteiro}}</td><td class="value">{{avo_mat_nomes}}</td></tr>
+        <tr><td class="label">4 Imię i nazwisko ojca</td><td class="label">5 Imię i nazwisko rodowe matki</td><td class="label">6 Data urodzenia</td></tr>
+        <tr><td class="value">{{avo_mat_pai}}</td><td class="value">{{avo_mat_mae}}</td><td class="value date-cell">{{avo_mat_nasc_ano}} / {{avo_mat_nasc_mes}} / {{avo_mat_nasc_dia}}</td></tr>
+        <tr><td class="label" colspan="2">7 Miejsce urodzenia</td><td class="label">8 Nr PESEL</td></tr>
+        <tr><td class="value" colspan="2">{{avo_mat_local_nasc}}</td><td class="value">{{avo_mat_pesel}}</td></tr>
+    </table>
+
+    <p class="subsection">II. Dane dotyczące babki ze strony matki.</p>
+    <table class="field-table">
+        <tr><td class="label" style="width:33%">1 Nazwisko</td><td class="label" style="width:33%">2 Nazwisko rodowe</td><td class="label" style="width:34%">3 Imię (imiona)</td></tr>
+        <tr><td class="value">{{ava_mat_sobrenome}}</td><td class="value">{{ava_mat_sobrenome_solteira}}</td><td class="value">{{ava_mat_nomes}}</td></tr>
+        <tr><td class="label">4 Imię i nazwisko ojca</td><td class="label">5 Imię i nazwisko rodowe matki</td><td class="label">6 Data urodzenia</td></tr>
+        <tr><td class="value">{{ava_mat_pai}}</td><td class="value">{{ava_mat_mae}}</td><td class="value date-cell">{{ava_mat_nasc_ano}} / {{ava_mat_nasc_mes}} / {{ava_mat_nasc_dia}}</td></tr>
+        <tr><td class="label" colspan="2">7 Miejsce urodzenia</td><td class="label">8 Nr PESEL</td></tr>
+        <tr><td class="value" colspan="2">{{ava_mat_local_nasc}}</td><td class="value">{{ava_mat_pesel}}</td></tr>
+    </table>
+</div>
+
+<!-- STRONA 5 z 12 -->
+<div class="page">
+    <p style="text-align:right; font-size:8pt; margin-bottom:10px;">Strona 5 z 12</p>
+
+    <p class="subsection">III. Dane dotyczące dziadka ze strony ojca.</p>
+    <table class="field-table">
+        <tr><td class="label" style="width:33%">1 Nazwisko</td><td class="label" style="width:33%">2 Nazwisko rodowe</td><td class="label" style="width:34%">3 Imię (imiona)</td></tr>
+        <tr><td class="value">{{avo_pat_sobrenome}}</td><td class="value">{{avo_pat_sobrenome_solteiro}}</td><td class="value">{{avo_pat_nomes}}</td></tr>
+        <tr><td class="label">4 Imię i nazwisko ojca</td><td class="label">5 Imię i nazwisko rodowe matki</td><td class="label">6 Data urodzenia</td></tr>
+        <tr><td class="value">{{avo_pat_pai}}</td><td class="value">{{avo_pat_mae}}</td><td class="value date-cell">{{avo_pat_nasc_ano}} / {{avo_pat_nasc_mes}} / {{avo_pat_nasc_dia}}</td></tr>
+        <tr><td class="label" colspan="2">7 Miejsce urodzenia</td><td class="label">8 Nr PESEL</td></tr>
+        <tr><td class="value" colspan="2">{{avo_pat_local_nasc}}</td><td class="value">{{avo_pat_pesel}}</td></tr>
+    </table>
+
+    <p class="subsection">IV. Dane dotyczące babki ze strony ojca.</p>
+    <table class="field-table">
+        <tr><td class="label" style="width:33%">1 Nazwisko</td><td class="label" style="width:33%">2 Nazwisko rodowe</td><td class="label" style="width:34%">3 Imię (imiona)</td></tr>
+        <tr><td class="value">{{ava_pat_sobrenome}}</td><td class="value">{{ava_pat_sobrenome_solteira}}</td><td class="value">{{ava_pat_nomes}}</td></tr>
+        <tr><td class="label">4 Imię i nazwisko ojca</td><td class="label">5 Imię i nazwisko rodowe matki</td><td class="label">6 Data urodzenia</td></tr>
+        <tr><td class="value">{{ava_pat_pai}}</td><td class="value">{{ava_pat_mae}}</td><td class="value date-cell">{{ava_pat_nasc_ano}} / {{ava_pat_nasc_mes}} / {{ava_pat_nasc_dia}}</td></tr>
+        <tr><td class="label" colspan="2">7 Miejsce urodzenia</td><td class="label">8 Nr PESEL</td></tr>
+        <tr><td class="value" colspan="2">{{ava_pat_local_nasc}}</td><td class="value">{{ava_pat_pesel}}</td></tr>
+    </table>
+</div>
+
+<!-- STRONA 6 z 12 -->
+<div class="page">
+    <p style="text-align:right; font-size:8pt; margin-bottom:10px;">Strona 6 z 12</p>
+    <p class="part-label">C Z Ę Ś Ć  II</p>
+
+    <p class="section-label">A. Życiorys osoby, której dotyczy wniosek</p>
+    <div class="text-block text-block-large">{{bio_requerente_pl}}</div>
+
+    <p class="section-label">B. Czy rodzice dokonali wyboru obywatelstwa obcego (Art. 6 ust. 1)?</p>
+    <div style="margin: 8px 0;">
+        <span class="checkbox {{check_tak}}">X</span> TAK &nbsp;&nbsp;
+        <span class="checkbox {{check_nie}}">X</span> NIE &nbsp;&nbsp;
+        <span class="checkbox {{check_nie_wiem}}">X</span> NIE WIEM &nbsp;&nbsp;
+        <span class="checkbox {{check_nie_dotyczy}}">X</span> NIE DOTYCZY
+    </div>
+    <p>Nazwa organu: {{art6_orgao}}</p>
+</div>
+
+<!-- STRONA 7 z 12 -->
+<div class="page">
+    <p style="text-align:right; font-size:8pt; margin-bottom:10px;">Strona 7 z 12</p>
+    <p class="part-label">C Z Ę Ś Ć  III</p>
+
+    <p class="section-label">A. Dodatkowe informacje dotyczące rodziców.</p>
+    <p class="subsection">I. Życiorys matki</p>
+    <div class="text-block text-block-large">{{bio_mae_pl}}</div>
+
+    <p class="subsection">II. Życiorys ojca</p>
+    <div class="text-block text-block-large">{{bio_pai_pl}}</div>
+</div>
+
+<!-- STRONA 8 z 12 -->
+<div class="page">
+    <p style="text-align:right; font-size:8pt; margin-bottom:10px;">Strona 8 z 12</p>
+
+    <p class="section-label">B. Dodatkowe informacje dotyczące dziadków.</p>
+    <p class="subsection">I. Życiorys dziadka ze strony matki</p>
+    <div class="text-block text-block-medium">{{bio_avo_mat_pl}}</div>
+
+    <p class="subsection">II. Życiorys babki ze strony matki</p>
+    <div class="text-block text-block-medium">{{bio_ava_mat_pl}}</div>
+
+    <p class="subsection">III. Życiorys dziadka ze strony ojca</p>
+    <div class="text-block text-block-medium">{{bio_avo_pat_pl}}</div>
+</div>
+
+<!-- STRONA 9 z 12 -->
+<div class="page">
+    <p style="text-align:right; font-size:8pt; margin-bottom:10px;">Strona 9 z 12</p>
+
+    <p class="subsection">IV. Życiorys babki ze strony ojca</p>
+    <div class="text-block text-block-medium">{{bio_ava_pat_pl}}</div>
+
+    <p class="section-label">C. Informacje o dalszych wstępnych (pradziadkowie)</p>
+    <div class="text-block text-block-large">{{bio_bisavos_pl}}</div>
+
+    <p class="section-label">D. Inne informacje o istotnych okolicznościach.</p>
+    <p class="subsection">I. Decyzje dotyczące rodzeństwa lub wstępnych</p>
+    <div class="text-block">{{info_decisoes_irmaos_pl}}</div>
+</div>
+
+<!-- STRONA 10 z 12 -->
+<div class="page">
+    <p style="text-align:right; font-size:8pt; margin-bottom:10px;">Strona 10 z 12</p>
+
+    <p class="subsection">II. Polskie dokumenty tożsamości wstępnych</p>
+    <div class="text-block">{{info_docs_poloneses_pl}}</div>
+
+    <p class="subsection">III. Zmiana/zrzeczenie obywatelstwa przez wstępnych</p>
+    <div class="text-block">{{info_renuncia_pl}}</div>
+
+    <p class="part-label">C Z Ę Ś Ć  IV</p>
+    <p class="section-label">Inne informacje oraz wyjaśnienia istotne dla sprawy.</p>
+    <div class="text-block text-block-large">{{info_adicional_pl}}</div>
+</div>
+
+<!-- STRONA 11 z 12 -->
+<div class="page">
+    <p style="text-align:right; font-size:8pt; margin-bottom:10px;">Strona 11 z 12</p>
+
+    <p class="section-label">Załączniki do wniosku</p>
+    <div class="text-block text-block-medium">{{anexos_lista}}</div>
+
+    <div class="signature-area">
+        <div class="signature-box">
+            <p>{{assinatura_ano}} / {{assinatura_mes}} / {{assinatura_dia}}</p>
+            <div class="signature-line">(data)</div>
+        </div>
+        <div class="signature-box">
+            <div class="signature-line">(podpis wnioskodawcy)</div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
