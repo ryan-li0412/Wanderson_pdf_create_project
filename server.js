@@ -50,6 +50,14 @@ app.post('/api/generate-pdf', async (req, res) => {
       }
     }
 
+    // Step 1.5: Uppercase all text values (except logic fields used for checkboxes)
+    const SKIP_UPPERCASE = new Set(['tipo_pedido', 'art6']);
+    for (const key of Object.keys(processedData)) {
+      if (!SKIP_UPPERCASE.has(key) && typeof processedData[key] === 'string') {
+        processedData[key] = processedData[key].toUpperCase();
+      }
+    }
+
     // Step 2: Generate PDF
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     const clientName = (formData.pedido_nome_alvo || 'documento').replace(/[^a-zA-Z0-9_-]/g, '_');
