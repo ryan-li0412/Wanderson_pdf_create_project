@@ -2,10 +2,12 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         @page { size: A4; margin: 20mm 15mm 20mm 15mm; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Arial', sans-serif; font-size: 9pt; color: #000; line-height: 1.3; }
+        body { font-family: 'Noto Sans', Arial, sans-serif; font-size: 9pt; color: #000; line-height: 1.3; }
 
         .page { page-break-after: always; position: relative; }
         .page:last-child { page-break-after: avoid; }
@@ -30,8 +32,8 @@
         .text-block-medium { min-height: 100px; }
 
         .checkbox-row { margin: 4px 0; font-size: 9pt; }
-        .checkbox { display: inline-block; width: 12px; height: 12px; border: 1px solid #000; margin-right: 4px; text-align: center; font-size: 8pt; line-height: 12px; vertical-align: middle; }
-        .checkbox.checked { background-color: #000; color: #fff; }
+        .checkbox { display: inline-block; width: 12px; height: 12px; border: 1px solid #000; margin-right: 4px; text-align: center; font-size: 8pt; line-height: 12px; vertical-align: middle; color: transparent; }
+        .checkbox.checked { color: #000; font-weight: bold; }
 
         .signature-area { margin-top: 30px; display: flex; justify-content: space-between; }
         .signature-box { text-align: center; width: 45%; }
