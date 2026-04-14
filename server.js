@@ -32,7 +32,9 @@ app.use('/output', express.static(OUTPUT_DIR));
 app.post('/api/generate-pdf', async (req, res) => {
   try {
     const formData = req.body;
-    console.log('Received form submission for:', formData.pedido_nome_alvo || 'unknown');
+    const filledFields = Object.entries(formData).filter(([k, v]) => v && String(v).trim()).map(([k]) => k);
+    console.log(`[FORM] Received ${filledFields.length} filled fields for: ${formData.pedido_nome_alvo || 'unknown'}`);
+    console.log('[FORM] Fields:', filledFields.join(', '));
 
     // Step 1: Translate fields via DeepL
     let processedData;
@@ -89,6 +91,15 @@ app.post('/api/generate-pdf', async (req, res) => {
     console.error('Error:', err);
     res.status(500).json({ success: false, error: err.message });
   }
+});
+
+// Debug: echo back received form fields (temporary)
+app.post('/api/debug-fields', (req, res) => {
+  const formData = req.body;
+  const filled = Object.entries(formData)
+    .filter(([k, v]) => v && String(v).trim())
+    .map(([k, v]) => ({ field: k, value: String(v).slice(0, 40) }));
+  res.json({ total_filled: filled.length, fields: filled });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
