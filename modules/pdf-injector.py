@@ -33,11 +33,11 @@ FONT_PATH = _find_font()
 
 BOX_FONT_SIZE = 7.5
 BOX_CHAR_OFFSET = 3.5   # pts from separator left edge to char baseline x
-BOX_Y_OFFSET = 8.5      # pts below box top y to text baseline
+BOX_Y_OFFSET = 6.5      # pts below box top y to text baseline (box height ~8pt, font 7.5pt)
 
 NARR_FONT_SIZE = 8.5
 NARR_X0 = 70.0
-NARR_MAX_CHARS_PER_LINE = 95  # approx for 455pt width at 8.5pt
+NARR_MAX_CHARS_PER_LINE = 78  # calibrated for uppercase Arial 8.5pt, 425pt available width
 
 # ============================================================
 # FIELD MAP  — letter boxes (pages 1-5)
@@ -199,12 +199,12 @@ FIELD_MAP = {
 NARRATIVE_MAP = {
     'bio_requerente': {
         'page': 5,
-        'lines': [170,182,194,206,218,230,242,254,266,278,290,302,314,326,338,350,362,374,386,398,410,422],
+        'lines': [182,194,206,218,230,242,254,266,278,290,302,314,326,338,350,362,374,386,398,410,422],
         'x0': 70.7,
     },
     'bio_mae': {
         'page': 6,
-        'lines': [167,179,191,203,215,227,239,251,263,275,287,299,311,323,335,347],
+        'lines': [179,191,203,215,227,239,251,263,275,287,299,311,323,335,347],
         'x0': 70.0,
     },
     'bio_pai': {
@@ -212,11 +212,10 @@ NARRATIVE_MAP = {
         'lines': [417,429,441,453,465,477,489,501,513,525,537,549,561,573,585],
         'x0': 70.0,
     },
-    'bio_avo_mat': {
-        'page': 7,
-        'lines': [100,112,124,136,148,160,172,184,196,208,220],
-        'x0': 70.0,
-    },
+    'bio_avo_mat': [
+        {'page': 6, 'lines': [675,687,699,711], 'x0': 70.0},
+        {'page': 7, 'lines': [100,112,124,136,148,160,172,184,196,208,220], 'x0': 70.0},
+    ],
     'bio_ava_mat': {
         'page': 7,
         'lines': [288,300,312,324,336,348,360,372,384,396,408,420,432,444,456],
@@ -294,16 +293,16 @@ def inject_letterbox(page, rows, text):
             page.insert_text((x, baseline_y), ch, **kwargs)
 
 
-def inject_narrative(page, lines, x0, text):
-    """Wrap text and inject across available dotted lines."""
-    if not text:
-        return
-    wrapped = textwrap.wrap(text, width=NARR_MAX_CHARS_PER_LINE)
-    for line_y, line_text in zip(lines, wrapped):
-        kwargs = {'fontsize': NARR_FONT_SIZE, 'color': (0, 0, 0)}
-        if FONT_PATH:
-            kwargs['fontfile'] = FONT_PATH
-        page.insert_text((x0, line_y), line_text, **kwargs)
+def inject_narrative(page, lines, x0, wrapped, start_idx=0):
+    """Inject pre-wrapped lines starting at start_idx. Returns number of lines written."""
+    kwargs = {'fontsize': NARR_FONT_SIZE, 'color': (0, 0, 0)}
+    if FONT_PATH:
+        kwargs['fontfile'] = FONT_PATH
+    written = 0
+    for line_y, line_text in zip(lines, wrapped[start_idx:]):
+        page.insert_text((x0, line_y + 9), line_text, **kwargs)
+        written += 1
+    return written
 
 
 def build_req_sexo_value(raw):
@@ -361,8 +360,14 @@ def inject_form(form_data, output_path):
         text = pl_value if pl_value else value
         if not text:
             continue
-        page_obj = pages[spec['page']]
-        inject_narrative(page_obj, spec['lines'], spec['x0'], text)
+        wrapped = textwrap.wrap(text, width=NARR_MAX_CHARS_PER_LINE)
+        # Support single spec (dict) or multi-page spec (list of dicts)
+        specs = spec if isinstance(spec, list) else [spec]
+        cursor = 0
+        for s in specs:
+            if cursor >= len(wrapped):
+                break
+            cursor += inject_narrative(pages[s['page']], s['lines'], s['x0'], wrapped, cursor)
 
     doc.save(output_path, garbage=4, deflate=True)
     doc.close()
