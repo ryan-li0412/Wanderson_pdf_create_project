@@ -5,10 +5,12 @@ async function translateText(text, apiKey) {
 
   const res = await fetch(DEEPL_API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      auth_key: apiKey,
-      text: text,
+    headers: {
+      'Authorization': `DeepL-Auth-Key ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      text: [text],
       source_lang: 'PT',
       target_lang: 'PL',
     }),
