@@ -5,8 +5,9 @@ nixPkgs = ["nodejs_20", "python311", "gcc"]
 cmds = [
   "npm ci --omit=dev",
   "python3 -m venv /app/.venv",
-  "/app/.venv/bin/pip install pymupdf==1.27.2.2"
+  "/app/.venv/bin/pip install pymupdf==1.27.2.2",
+  "find /nix/store -name 'libstdc++.so.6' 2>/dev/null | head -1 | xargs -I{} dirname {} > /app/.gcc_lib_path || true"
 ]
 
 [start]
-cmd = "export LD_LIBRARY_PATH=$(find /nix/store -name 'libstdc++.so.6' 2>/dev/null | head -1 | xargs dirname 2>/dev/null):$LD_LIBRARY_PATH && node server.js"
+cmd = "export LD_LIBRARY_PATH=$(cat /app/.gcc_lib_path 2>/dev/null):$LD_LIBRARY_PATH && node server.js"
