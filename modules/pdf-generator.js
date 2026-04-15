@@ -15,8 +15,8 @@ async function generatePDF(formData, outputPath) {
   fs.writeFileSync(tmpJson, JSON.stringify(formData, null, 2), 'utf-8');
 
   return new Promise((resolve, reject) => {
-    // Try 'python' first (Windows default), fall back to 'python3'
-    const pythonCmd = process.platform === 'win32' ? 'python' : 'python3';
+    // Windows: use 'python', Linux (Railway): use venv python
+    const pythonCmd = process.platform === 'win32' ? 'python' : '/app/.venv/bin/python3';
 
     execFile(
       pythonCmd,
