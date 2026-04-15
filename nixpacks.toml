@@ -9,4 +9,4 @@ cmds = [
 ]
 
 [start]
-cmd = "node server.js"
+cmd = "export LD_LIBRARY_PATH=$(find /nix/store -name 'libstdc++.so.6' 2>/dev/null | head -1 | xargs dirname 2>/dev/null):$LD_LIBRARY_PATH && node server.js"
