@@ -27,9 +27,18 @@ def _find_font():
     for p in candidates:
         if p.exists():
             return str(p)
-    return None  # PyMuPDF will use built-in helv as fallback (no Polish chars but won't crash)
+    return None
 
 FONT_PATH = _find_font()
+# TextWriter font — full Unicode support (handles Polish Ą Ć Ę Ł Ń Ó Ś Ź Ż etc.)
+_FITZ_FONT = fitz.Font(fontfile=FONT_PATH) if FONT_PATH else fitz.Font("helv")
+
+
+def _tw_insert(page, x, y, text, fontsize):
+    """Insert text at (x, y) using TextWriter for full Unicode glyph support."""
+    tw = fitz.TextWriter(page.rect)
+    tw.append(fitz.Point(x, y), text, font=_FITZ_FONT, fontsize=fontsize)
+    tw.write_text(page, color=(0, 0, 0))
 
 BOX_FONT_SIZE = 7.5
 BOX_CHAR_OFFSET = 3.5   # pts from separator left edge to char baseline x
@@ -284,23 +293,16 @@ def inject_letterbox(page, rows, text):
                 break
             ch = chars[char_idx]
             char_idx += 1
-            # Place character centered in box: x0 + box_i*sp + offset
             x = x0 + box_i * sp + BOX_CHAR_OFFSET
             baseline_y = y + BOX_Y_OFFSET
-            kwargs = {'fontsize': BOX_FONT_SIZE, 'color': (0, 0, 0)}
-            if FONT_PATH:
-                kwargs['fontfile'] = FONT_PATH
-            page.insert_text((x, baseline_y), ch, **kwargs)
+            _tw_insert(page, x, baseline_y, ch, BOX_FONT_SIZE)
 
 
 def inject_narrative(page, lines, x0, wrapped, start_idx=0):
     """Inject pre-wrapped lines starting at start_idx. Returns number of lines written."""
-    kwargs = {'fontsize': NARR_FONT_SIZE, 'color': (0, 0, 0)}
-    if FONT_PATH:
-        kwargs['fontfile'] = FONT_PATH
     written = 0
     for line_y, line_text in zip(lines, wrapped[start_idx:]):
-        page.insert_text((x0, line_y + 9), line_text, **kwargs)
+        _tw_insert(page, x0, line_y + 9, line_text, NARR_FONT_SIZE)
         written += 1
     return written
 
@@ -347,10 +349,7 @@ def inject_form(form_data, output_path):
                 char_idx += 1
                 x = x0 + box_i * sp + BOX_CHAR_OFFSET
                 baseline_y = y + BOX_Y_OFFSET
-                kwargs = {'fontsize': BOX_FONT_SIZE, 'color': (0, 0, 0)}
-                if FONT_PATH:
-                    kwargs['fontfile'] = FONT_PATH
-                page_obj.insert_text((x, baseline_y), ch, **kwargs)
+                _tw_insert(page_obj, x, baseline_y, ch, BOX_FONT_SIZE)
 
     # --- Narrative fields ---
     for field_name, spec in NARRATIVE_MAP.items():
