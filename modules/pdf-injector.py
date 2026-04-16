@@ -6,7 +6,6 @@ Usage: python pdf-injector.py <input_json_path> <output_pdf_path>
 
 import sys
 import json
-import textwrap
 import fitz  # PyMuPDF
 from pathlib import Path
 
@@ -46,7 +45,7 @@ BOX_Y_OFFSET = 6.5      # pts below box top y to text baseline (box height ~8pt,
 
 NARR_FONT_SIZE = 8.5
 NARR_X0 = 70.0
-NARR_MAX_CHARS_PER_LINE = 78  # calibrated for uppercase Arial 8.5pt, 425pt available width
+NARR_X1 = 525.0  # right margin for narrative text (A4 width 595 - ~70pt right margin)
 
 # ============================================================
 # FIELD MAP  — letter boxes (pages 1-5)
@@ -298,13 +297,21 @@ def inject_letterbox(page, rows, text):
             _tw_insert(page, x, baseline_y, ch, BOX_FONT_SIZE)
 
 
-def inject_narrative(page, lines, x0, wrapped, start_idx=0):
-    """Inject pre-wrapped lines starting at start_idx. Returns number of lines written."""
-    written = 0
-    for line_y, line_text in zip(lines, wrapped[start_idx:]):
-        _tw_insert(page, x0, line_y + 9, line_text, NARR_FONT_SIZE)
-        written += 1
-    return written
+def inject_narrative(page, lines, x0, text):
+    """Inject narrative text as justified, filling the dotted-line area."""
+    if not text or not lines:
+        return 0
+    y_top = lines[0] - 3
+    y_bottom = lines[-1] + NARR_FONT_SIZE + 4
+    rect = fitz.Rect(x0, y_top, NARR_X1, y_bottom)
+    kwargs = dict(fontsize=NARR_FONT_SIZE, align=fitz.TEXT_ALIGN_JUSTIFY, color=(0, 0, 0))
+    if FONT_PATH:
+        kwargs['fontfile'] = FONT_PATH
+        kwargs['fontname'] = 'custom'
+    else:
+        kwargs['fontname'] = 'helv'
+    page.insert_textbox(rect, text, **kwargs)
+    return len(lines)
 
 
 def build_req_sexo_value(raw):
@@ -321,7 +328,7 @@ def inject_form(form_data, output_path):
     doc = fitz.open(OFFICIAL_PDF)
     pages = [doc[i] for i in range(len(doc))]
 
-    # --- Letter box fields (character-by-character with multi-row overflow) ---
+    # --- Letter box fields (character-by-character, auto-compress if text exceeds boxes) ---
     for field_name, rows in FIELD_MAP.items():
         value = form_data.get(field_name, '')
         if not value:
@@ -331,25 +338,45 @@ def inject_form(form_data, output_path):
         value = str(value).upper().strip()
 
         chars = list(value)
-        char_idx = 0
+        total_boxes = sum(row['n'] for row in rows)
 
-        for row in rows:
-            if char_idx >= len(chars):
-                break
-            y  = row['y']
-            x0 = row['x0']
-            n  = row['n']
-            sp = row['sp']
-            page_obj = pages[row['page']]
-
-            for box_i in range(n):
+        if len(chars) <= total_boxes:
+            # Normal: one char per box
+            char_idx = 0
+            for row in rows:
                 if char_idx >= len(chars):
                     break
-                ch = chars[char_idx]
-                char_idx += 1
-                x = x0 + box_i * sp + BOX_CHAR_OFFSET
-                baseline_y = y + BOX_Y_OFFSET
-                _tw_insert(page_obj, x, baseline_y, ch, BOX_FONT_SIZE)
+                page_obj = pages[row['page']]
+                for box_i in range(row['n']):
+                    if char_idx >= len(chars):
+                        break
+                    x = row['x0'] + box_i * row['sp'] + BOX_CHAR_OFFSET
+                    baseline_y = row['y'] + BOX_Y_OFFSET
+                    _tw_insert(page_obj, x, baseline_y, chars[char_idx], BOX_FONT_SIZE)
+                    char_idx += 1
+        else:
+            # Auto-fit: compress spacing so all chars fit on available rows
+            total_width = sum(row['n'] * row['sp'] for row in rows)
+            char_spacing = total_width / len(chars)
+            scale = char_spacing / rows[0]['sp']
+            effective_fontsize = max(4.5, BOX_FONT_SIZE * scale)
+            char_idx = 0
+            for row in rows:
+                if char_idx >= len(chars):
+                    break
+                page_obj = pages[row['page']]
+                row_width = row['n'] * row['sp']
+                chars_this_row = min(len(chars) - char_idx, round(row_width / char_spacing))
+                if chars_this_row <= 0:
+                    continue
+                actual_sp = row_width / chars_this_row
+                for i in range(chars_this_row):
+                    if char_idx >= len(chars):
+                        break
+                    x = row['x0'] + i * actual_sp + BOX_CHAR_OFFSET
+                    baseline_y = row['y'] + BOX_Y_OFFSET
+                    _tw_insert(page_obj, x, baseline_y, chars[char_idx], effective_fontsize)
+                    char_idx += 1
 
     # --- Narrative fields ---
     for field_name, spec in NARRATIVE_MAP.items():
@@ -359,14 +386,10 @@ def inject_form(form_data, output_path):
         text = pl_value if pl_value else value
         if not text:
             continue
-        wrapped = textwrap.wrap(text, width=NARR_MAX_CHARS_PER_LINE)
         # Support single spec (dict) or multi-page spec (list of dicts)
         specs = spec if isinstance(spec, list) else [spec]
-        cursor = 0
         for s in specs:
-            if cursor >= len(wrapped):
-                break
-            cursor += inject_narrative(pages[s['page']], s['lines'], s['x0'], wrapped, cursor)
+            inject_narrative(pages[s['page']], s['lines'], s['x0'], text)
 
     doc.save(output_path, garbage=4, deflate=True)
     doc.close()
