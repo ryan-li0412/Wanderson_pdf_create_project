@@ -14,6 +14,12 @@ PAGE_W_PX = round(595 * SCALE)   # 1240
 PAGE_H_PX = round(842 * SCALE)   # 1753
 
 FIELD_MAP = {
+    # Top-page: place and date of filing (box_h=12 — taller boxes)
+    'miejsce_zlozenia': [{'page': 0, 'y': 137, 'x0': 325.04, 'n': 10, 'sp': 17.27, 'box_h': 12.0}],
+    'data_zlozenia_ano': [{'page': 0, 'y': 161, 'x0': 325.04, 'n': 4, 'sp': 17.27, 'box_h': 12.0}],
+    'data_zlozenia_mes': [{'page': 0, 'y': 161, 'x0': 411.38, 'n': 2, 'sp': 17.27, 'box_h': 12.0}],
+    'data_zlozenia_dia': [{'page': 0, 'y': 161, 'x0': 463.16, 'n': 2, 'sp': 17.27, 'box_h': 12.0}],
+
     'wnioskodawca_nome': [
         {'page': 0, 'y': 345, 'x0': 152.37, 'n': 20, 'sp': 17.27},
         {'page': 0, 'y': 361, 'x0': 152.37, 'n': 20, 'sp': 17.27},
@@ -22,8 +28,12 @@ FIELD_MAP = {
     'endereco_cidade': [{'page': 0, 'y': 425, 'x0': 152.37, 'n': 20, 'sp': 17.27}],
     'endereco_rua':    [{'page': 0, 'y': 441, 'x0': 152.37, 'n': 20, 'sp': 17.27}],
     'endereco_casa':   [{'page': 0, 'y': 456, 'x0': 152.89, 'n': 7,  'sp': 17.27}],
-    'endereco_apto':   [{'page': 0, 'y': 456, 'x0': 376.83, 'n': 6, 'sp': 17.27}],
-    'endereco_cep':    [{'page': 0, 'y': 474, 'x0': 152.37, 'n': 8,  'sp': 17.27}],
+    'endereco_apto':   [{'page': 0, 'y': 456, 'x0': 376.83, 'n': 7, 'sp': 17.27}],
+    'endereco_cep':    [
+        {'page': 0, 'y': 474, 'x0': 152.37, 'n': 2, 'sp': 17.22, 'char_start': 0},
+        {'page': 0, 'y': 474, 'x0': 204.15, 'n': 3, 'sp': 17.27, 'char_start': 2},
+    ],
+    'endereco_poczta': [{'page': 0, 'y': 474, 'x0': 290.49, 'n': 12, 'sp': 17.27}],
     'endereco_tel':    [{'page': 0, 'y': 489, 'x0': 152.37, 'n': 20, 'sp': 17.27}],
 
     'req_sobrenome':          [{'page': 1, 'y': 312, 'x0': 152.37, 'n': 20, 'sp': 17.27}],
@@ -159,15 +169,32 @@ def build_inputs_for_page(page_idx):
         if not page_rows:
             continue
 
-        total_chars = sum(r['n'] for r in page_rows)
         first_row = page_rows[0]
         last_row  = page_rows[-1]
+        has_char_start = any('char_start' in r for r in page_rows)
 
-        # Input overlaid directly on the box area (covers all rows)
-        ix = pt(first_row['x0'])
-        iw = pt(first_row['n'] * first_row['sp'])
-        iy = pt(first_row['y'])
-        ih = pt(last_row['y']) + pt(BOX_H) - iy  # full height of all rows
+        # Total chars: use char_start + n of last row if explicit, else sum
+        if has_char_start:
+            total_chars = last_row.get('char_start', 0) + last_row['n']
+        else:
+            total_chars = sum(r['n'] for r in page_rows)
+
+        # Detect horizontal split (same y, multiple groups) vs vertical multi-row
+        same_y = all(r['y'] == first_row['y'] for r in page_rows)
+        if same_y and len(page_rows) > 1:
+            # Horizontal split: input spans from first group start to last group end
+            ix = pt(first_row['x0'])
+            ix_end = pt(last_row['x0'] + last_row['n'] * last_row['sp'])
+            iw = ix_end - ix
+            iy = pt(first_row['y'])
+            ih = pt(first_row.get('box_h', BOX_H))
+        else:
+            # Vertical multi-row: input spans all rows vertically
+            ix = pt(first_row['x0'])
+            iw = pt(first_row['n'] * first_row['sp'])
+            iy = pt(first_row['y'])
+            ih = pt(last_row['y']) + pt(last_row.get('box_h', BOX_H)) - iy
+
         inputs.append(
             f'<input type="text" maxlength="{total_chars}" '
             f'data-field="{field_name}" '
@@ -179,16 +206,17 @@ def build_inputs_for_page(page_idx):
         char_idx = 0
         for row in page_rows:
             ch_w = pt(row['sp'])
-            ch_h = pt(BOX_H)
+            ch_h = pt(row.get('box_h', BOX_H))
             cy   = pt(row['y'])
+            start = row.get('char_start', char_idx)
             for col in range(row['n']):
                 cx = pt(row['x0'] + col * row['sp'])
                 inputs.append(
-                    f'<span data-field="{field_name}" data-idx="{char_idx}" '
+                    f'<span data-field="{field_name}" data-idx="{start + col}" '
                     f'style="left:{cx}px;top:{cy}px;width:{ch_w}px;height:{ch_h}px;" '
                     f'class="char-cell"></span>'
                 )
-                char_idx += 1
+            char_idx = start + row['n']
 
     # Narrative fields
     for field_name, spec in NARRATIVE_MAP.items():
@@ -208,14 +236,17 @@ def build_inputs_for_page(page_idx):
     return '\n'.join(inputs)
 
 
-def generate():
+def generate(pt_mode=False):
+    img_dir   = 'form_pages_pt' if pt_mode else 'form_pages'
+    out_name  = 'form_viewer_pt.html' if pt_mode else 'form_viewer.html'
+    endpoint  = '/api/generate-pdf-pt' if pt_mode else '/api/generate-pdf'
     pages_html = ''
     for i in range(11):
         inputs = build_inputs_for_page(i)
         pages_html += f'''
   <div class="page-wrap">
     <div class="page" style="width:{PAGE_W_PX}px;height:{PAGE_H_PX}px;">
-      <img src="form_pages/page_{i+1}.png" width="{PAGE_W_PX}" height="{PAGE_H_PX}">
+      <img src="{img_dir}/page_{i+1}.png" width="{PAGE_W_PX}" height="{PAGE_H_PX}">
       {inputs}
     </div>
   </div>'''
@@ -338,28 +369,30 @@ def generate():
       data[ta.name] = ta.value.toUpperCase();
     }});
 
-    fetch('/generate-pdf', {{
+    fetch('{endpoint}', {{
       method: 'POST',
       headers: {{ 'Content-Type': 'application/json' }},
       body: JSON.stringify(data)
     }})
-    .then(r => r.blob())
-    .then(blob => {{
-      const url = URL.createObjectURL(blob);
+    .then(r => r.json())
+    .then(result => {{
+      if (!result.success) {{ alert('Erro: ' + result.error); return; }}
       const a = document.createElement('a');
-      a.href = url;
-      a.download = 'formulario_cidadania.pdf';
+      a.href = result.downloadUrl;
+      a.download = result.fileName || 'formulario_cidadania.pdf';
       a.click();
-    }});
+    }})
+    .catch(err => alert('Erro ao gerar PDF: ' + err.message));
   }});
 </script>
 </body>
 </html>'''
 
-    out = Path(__file__).parent.parent / 'public' / 'form_viewer.html'
+    out = Path(__file__).parent.parent / 'public' / out_name
     out.write_text(html, encoding='utf-8')
     print(f'[generate_form_html] Saved: {out}')
 
 
 if __name__ == '__main__':
-    generate()
+    import sys
+    generate(pt_mode='--pt' in sys.argv)

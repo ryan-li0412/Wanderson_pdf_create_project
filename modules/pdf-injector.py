@@ -58,6 +58,12 @@ NARR_X1 = 525.0  # right margin for narrative text (A4 width 595 - ~70pt right m
 # ============================================================
 FIELD_MAP = {
 
+    # ---- PAGE 1 (top stamp area) ----
+    'miejsce_zlozenia':  [{'page': 0, 'y': 137, 'x0': 325.04, 'n': 10, 'sp': 17.27}],
+    'data_zlozenia_ano': [{'page': 0, 'y': 161, 'x0': 325.04, 'n': 4,  'sp': 17.27}],
+    'data_zlozenia_mes': [{'page': 0, 'y': 161, 'x0': 411.38, 'n': 2,  'sp': 17.27}],
+    'data_zlozenia_dia': [{'page': 0, 'y': 161, 'x0': 463.16, 'n': 2,  'sp': 17.27}],
+
     # ---- PAGE 1 ----
     'wnioskodawca_nome': [
         {'page': 0, 'y': 345, 'x0': 152.37, 'n': 20, 'sp': 17.27},
@@ -69,8 +75,9 @@ FIELD_MAP = {
     # y=456: 16 wider boxes — first 7 = house nr, last 7 = apt nr (gap in middle)
     'endereco_casa':    [{'page': 0, 'y': 456, 'x0': 152.89, 'n': 7,  'sp': 22.99}],
     'endereco_apto':    [{'page': 0, 'y': 456, 'x0': 152.89 + 9 * 22.99, 'n': 6, 'sp': 22.99}],
-    # y=474: postal code (first 8 boxes, wider spacing)
+    # y=474: postal code (first 8 boxes) + city after code
     'endereco_cep':     [{'page': 0, 'y': 474, 'x0': 152.37, 'n': 8,  'sp': 18.18}],
+    'endereco_poczta':  [{'page': 0, 'y': 474, 'x0': 290.49, 'n': 12, 'sp': 17.27}],
     # y=489: telephone
     'endereco_tel':     [{'page': 0, 'y': 489, 'x0': 152.37, 'n': 20, 'sp': 17.27}],
 

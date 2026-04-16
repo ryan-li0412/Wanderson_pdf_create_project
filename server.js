@@ -93,6 +93,70 @@ app.post('/api/generate-pdf', async (req, res) => {
   }
 });
 
+// PT form endpoint (Portuguese labels → same pipeline as /api/generate-pdf)
+app.post('/api/generate-pdf-pt', async (req, res) => {
+  try {
+    const formData = req.body;
+    const filledFields = Object.entries(formData).filter(([k, v]) => v && String(v).trim()).map(([k]) => k);
+    console.log(`[FORM-PT] Received ${filledFields.length} filled fields for: ${formData.pedido_nome_alvo || 'unknown'}`);
+    console.log('[FORM-PT] Fields:', filledFields.join(', '));
+
+    // Step 1: Translate fields via DeepL
+    let processedData;
+    if (DEEPL_API_KEY) {
+      console.log('Translating fields via DeepL...');
+      processedData = await translateFormData(formData, DEEPL_API_KEY);
+      console.log('Translation complete');
+    } else {
+      console.log('No DeepL API key - using original text (no translation)');
+      processedData = { ...formData };
+      const { TRANSLATABLE_FIELDS } = require('./modules/deepl');
+      for (const field of TRANSLATABLE_FIELDS) {
+        processedData[`${field}_pl`] = formData[field] || '';
+      }
+    }
+
+    // Step 1.5: Uppercase all text values
+    const SKIP_UPPERCASE = new Set(['tipo_pedido', 'art6']);
+    for (const key of Object.keys(processedData)) {
+      if (!SKIP_UPPERCASE.has(key) && typeof processedData[key] === 'string') {
+        processedData[key] = processedData[key].toUpperCase();
+      }
+    }
+
+    // Step 2: Generate PDF
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const clientName = (formData.pedido_nome_alvo || 'documento').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const fileName = `${clientName}_${timestamp}.pdf`;
+    const outputPath = path.join(OUTPUT_DIR, fileName);
+
+    console.log('Generating PDF...');
+    await generatePDF(processedData, outputPath);
+    console.log('PDF generated:', fileName);
+
+    // Step 3: Upload to Google Drive (optional)
+    let driveUrl = null;
+    if (driveCredentials) {
+      console.log('Uploading to Google Drive...');
+      const driveResult = await uploadToDrive(outputPath, driveCredentials, DRIVE_FOLDER_ID);
+      if (driveResult) {
+        driveUrl = driveResult.webViewLink;
+        console.log('Uploaded to Drive:', driveUrl);
+      }
+    }
+
+    res.json({
+      success: true,
+      downloadUrl: `/output/${fileName}`,
+      driveUrl,
+      fileName,
+    });
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Debug: echo back received form fields (temporary)
 app.post('/api/debug-fields', (req, res) => {
   const formData = req.body;
